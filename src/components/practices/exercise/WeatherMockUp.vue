@@ -21,6 +21,13 @@ const showDetail = (cityName, status) => {
 </script>
 
 <template>
+  /* 
+  v-for: 일정, 옷, 체크리스트
+  v-model: 체크리스트 체크 상태 변경
+  :class: 날씨상태 또는 완료 여부별 스타일
+  v-if: 비가 올 때만 우산 챙기기 표시
+  @click:온도 단위를 화씨/섭씨 변경하거나 일정 완료 처리
+   */
   <div class="dashboard-wrapper">
     <section class="search-box">
       <h3>도시 검색</h3>
@@ -41,8 +48,16 @@ const showDetail = (cityName, status) => {
         :key="item.id"
         @click="selectedCard = `${item.name}이(가) 선택됐습니다.`"
       >
-        <p>{{ item.name }} ({{ item.status }})</p>
+      <div class="weather-card-header">
+  <p>{{ item.name }} ({{ item.status }})</p>
+
+  <label v-if="item.status === '비'" class="rain-check">
+    <input class="rain-check-input" type="checkbox" @click.stop />
+    우산 챙김
+  </label>
+</div>
         <p>현재 기온: {{ item.temp }} °C</p>
+        <p>습도: {{ item.humidity }}% &nbsp;| &nbsp;바람: {{ item.wind }}</p>
         <label class="badge hot" v-if="item.temp >= 25">🔥 더움 (25도 이상)</label>
         <label class="badge cool" v-else>❄️ 선선함 (25도 미만)</label>
         <button class="btn-detail" @click.stop="showDetail(item.name, item.status)">
@@ -56,3 +71,34 @@ const showDetail = (cityName, status) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.weather-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.weather-card-header p {
+  margin: 0;
+}
+
+.rain-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #2563eb;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+input.rain-check-input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+</style>
