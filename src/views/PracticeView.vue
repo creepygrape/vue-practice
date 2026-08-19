@@ -28,7 +28,7 @@ import Reactive from '@/components/practices/basic/Reactive.vue'
     <h1>This is an about page</h1>
     <div style="padding: 20px">
       <h1>Vue Syntax</h1>
-      <hr>
+      <hr />
       <SampleOne />
       <SampleTwo />
       <VHtml />
@@ -51,9 +51,9 @@ import Reactive from '@/components/practices/basic/Reactive.vue'
       <TwoWayBinding />
       <FormBinding />
       <FormBinding2 />
-      
+
       <h1>Compositioin API</h1>
-      <hr>
+      <hr />
       <Ref />
       <Reactive />
     </div>
