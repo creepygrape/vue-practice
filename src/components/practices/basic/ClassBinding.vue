@@ -11,9 +11,7 @@ const themeClass = ref('bg-dark') // 배열 바인딩용 고정 클래스
     <button @click="isWarning = !isWarning">경고 상태 토글</button>
     <br />
     <h3>클래스 바인딩 (배열 형식)</h3>
-    <div :class="[themeClass, isWarning ? 'border-red' : 'border-gray']">
-      다중 클래스가 조립된 박스 구역입니다.
-    </div>
+    <div :class="[themeClass, isWarning ? 'border-red' : 'border-gray']">다중 클래스가 조립된 박스 구역입니다.</div>
   </div>
 </template>
 <style scoped>

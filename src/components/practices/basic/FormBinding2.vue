@@ -13,7 +13,7 @@ const price = ref('')
     <!-- .lazy -->
     <section style="margin-bottom: 20px">
       <h3>1) .lazy 수식어 (change 이벤트 시점 반영)</h3>
-      <input type="text" v-model.lazy="lazytext" placeholder="입력 후 Enter 혹은 외부 클릭" />
+      <input type="text" v-model.lazy="lazyText" placeholder="입력 후 Enter 혹은 외부 클릭" />
       <p>
         실시간이 아닌 확정된 값: <strong>{{ lazyText }}</strong>
       </p>

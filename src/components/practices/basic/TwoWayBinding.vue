@@ -14,12 +14,7 @@ const text2 = ref('')
       입력된 값: <strong>{{ text1 }}</strong>
     </p>
     <h3>2) v-model의 내부 동작 원리 (단방향 + 이벤트)</h3>
-    <input
-      type="text"
-      :value="text2"
-      @input="(e) => (text2 = e.target.value)"
-      placeholder="원리 파악용 입력창"
-    />
+    <input type="text" :value="text2" @input="(e) => (text2 = e.target.value)" placeholder="원리 파악용 입력창" />
     <p>
       입력된 값: <strong>{{ text2 }}</strong>
     </p>

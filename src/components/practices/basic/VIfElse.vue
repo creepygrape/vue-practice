@@ -19,9 +19,7 @@ const score = ref(85)
     <label>현재 점수 입력: </label>
     <input type="number" v-model="score" min="0" max="100" step="5" />
     <br />
-    <div v-if="score >= 90" style="color: green; font-weight: bold">
-      합격 등급: A 학점 (ㅊㅋㅊㅋ)
-    </div>
+    <div v-if="score >= 90" style="color: green; font-weight: bold">합격 등급: A 학점 (ㅊㅋㅊㅋ)</div>
     <div v-else-if="score >= 80" style="color: blue">합격 등급: B 학점 (굿굿)</div>
     <div v-else-if="score >= 70" style="color: orange">합격 등급: C 학점 (무난)</div>
     <div v-else style="color: red; font-weight: bold">불합격 등급: F 학점 (ㅠㅠ)</div>

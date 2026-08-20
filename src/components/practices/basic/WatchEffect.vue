@@ -25,9 +25,7 @@ watchEffect(() => {
     <div class="monitor">
       <h3>👁️‍🗨️ watchEffect 자동 모니터링 시스템</h3>
       <p>{{ logMessage }}</p>
-      <small style="color: gray">
-        ※ 새로고침하자마자 버튼을 안 눌러도 로그가 이미 찍혀있는 특징을 주목하세요!
-      </small>
+      <small style="color: gray"> ※ 새로고침하자마자 버튼을 안 눌러도 로그가 이미 찍혀있는 특징을 주목하세요! </small>
     </div>
   </div>
 </template>

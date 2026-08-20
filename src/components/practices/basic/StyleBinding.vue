@@ -22,9 +22,7 @@ const baseBoxStyle = ref({
     <input type="number" v-model="boxWidth" step="50" />
     <br />
     <div :style="[baseBoxStyle, { width: boxWidth + 'px' }]">
-      <p style="color: white; padding: 10px; text-align: center">
-        가로 크기: {{ boxWidth }}px 박스
-      </p>
+      <p style="color: white; padding: 10px; text-align: center">가로 크기: {{ boxWidth }}px 박스</p>
     </div>
   </div>
 </template>
