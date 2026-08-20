@@ -126,3 +126,17 @@ input:focus {
 .btn-external:active {
   background-color: #2c8a5f;
 }
+.base-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 10px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.display-panel {
+  background-color: #fdf2e9;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
