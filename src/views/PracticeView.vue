@@ -19,13 +19,12 @@ import EventObject from '@/components/practices/basic/EventObject.vue'
 import TwoWayBinding from '@/components/practices/basic/TwoWayBinding.vue'
 import FormBinding from '@/components/practices/basic/FormBinding.vue'
 import FormBinding2 from '@/components/practices/basic/FormBinding2.vue'
-import Ref from '@/components/practices/basic/Ref.vue'
-import Reactive from '@/components/practices/basic/Reactive.vue'
+import VBindShort from '@/components/practices/basic/VBindShort.vue'
+import EventModifier from '@/components/practices/basic/EventModifier.vue'
 </script>
 
 <template>
   <div class="about">
-    <h1>This is an about page</h1>
     <div style="padding: 20px">
       <h1>Vue Syntax</h1>
       <hr />
@@ -51,11 +50,6 @@ import Reactive from '@/components/practices/basic/Reactive.vue'
       <TwoWayBinding />
       <FormBinding />
       <FormBinding2 />
-
-      <h1>Compositioin API</h1>
-      <hr />
-      <Ref />
-      <Reactive />
     </div>
   </div>
 </template>
