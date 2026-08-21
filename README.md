@@ -1,3 +1,7 @@
 .env : baseurl, apikey
 constants/weather.js : citypool
-우산 챙기기
+
+element-plus : fetch openweather api loading, pagination, 습도 progress
+pagination component: paginationBar
+
+localstorage? 즐겨찾기
