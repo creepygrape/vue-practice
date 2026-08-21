@@ -28,7 +28,12 @@ const router = createRouter({
     {
       path: '/components',
       name: 'Component',
-      component: () => import('../views/Component.vue'),
+      component: () => import('../views/ComponentView.vue'),
+    },
+    {
+      path: '/libraries',
+      name: 'Library',
+      component: () => import('../views/LibraryView.vue'),
     },
     // Not Found
     {
