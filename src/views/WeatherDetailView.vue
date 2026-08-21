@@ -19,6 +19,9 @@ const fetchRealTimeWeather = async () => {
   isLoading.value = true
 
   try {
+    // element-plus loading 확인용
+    // await new Promise((resolve) => setTimeout(resolve, 2000))
+
     const response = await axios.get(BASE_URL, {
       params: {
         id: route.params.cityId,
@@ -68,7 +71,8 @@ const displayTemp = computed(() => {
     <h3>📊 지역별 상세 기상 관측 정보</h3>
     <hr />
 
-    <div v-if="weather" class="info-card">
+    <div v-if="isLoading" v-loading="isLoading" element-loading-text="상세 정보를 불러오는 중입니다... ☁️" class="info-card loading-area"></div>
+    <div v-else-if="weather" class="info-card">
       <h4>📍 지정 지역: {{ weather.name }}</h4>
       <p>
         실시간 기온: <strong>{{ displayTemp }}{{ configStore.unitSymbol }}</strong>
@@ -77,8 +81,8 @@ const displayTemp = computed(() => {
       <p>대기 습도: {{ weather.humidity }}</p>
       <p>현재 풍속: {{ weather.wind }}</p>
     </div>
-    <div v-else>
-      <p>해당 지역의 상세 데이터 장부가 존재하지 않습니다.</p>
+    <div v-else class="weather-card">
+      <p>해당 지역의 상세 정보가 존재하지 않습니다.</p>
     </div>
 
     <button @click="router.push('/')" class="back-btn">← 메인 대시보드로 돌아가기</button>

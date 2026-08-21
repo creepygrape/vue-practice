@@ -6,6 +6,7 @@ import WeatherCard from '@/components/practices/exercise/WeatherCard.vue'
 import { useRouter } from 'vue-router'
 import { cityPool } from '@/constants/weather'
 import axios from 'axios'
+import PaginationBar from '@/components/practices/exercise/PaginationBar.vue'
 
 const router = useRouter()
 const searchCity = ref('')
@@ -13,27 +14,8 @@ const selectedCity = ref('')
 
 const selectedStatus = ref('전체')
 
-const fashionList = ref([
-  { id: 'fashion_01', status: '맑음', recommendation: '반팔 티셔츠, 얇은 셔츠, 선글라스', emoji: '🕶️' },
-  { id: 'fashion_02', status: '흐림', recommendation: '긴팔 티셔츠나 가벼운 가디건', emoji: '🧥' },
-  { id: 'fashion_03', status: '구름', recommendation: '반팔 또는 얇은 긴팔, 가벼운 겉옷', emoji: '👕' },
-  { id: 'fashion_04', status: '비', recommendation: '방수 재킷, 우산, 미끄럽지 않은 신발', emoji: '☔' },
-  { id: 'fashion_05', status: '바람', recommendation: '바람막이와 긴 바지', emoji: '🌬️' },
-])
-
-// const showDetail = (cityName, status) => {
-//   window.alert(`${cityName}의 현재 날씨는 [${status}] 상태입니다.`)
-// }
-
-// const isCelsius = ref(true)
-
-// const displayTemperature = (celsius) => {
-//   if (isCelsius.value) {
-//     return celsius
-//   }
-
-//   return ((celsius * 9) / 5 + 32).toFixed(1)
-// }
+const currentPage = ref(1)
+const pageSize = 5
 
 const matchesWeatherFilter = (item) => {
   if (selectedStatus.value === '전체') return true
@@ -66,7 +48,7 @@ const filteredWeatherList = computed(() => {
 
   return weatherList.value.filter((item) => {
     const matchesCity = item.name.includes(keyword)
-    const matchesStatus =  matchesWeatherFilter(item)
+    const matchesStatus = matchesWeatherFilter(item)
 
     return matchesCity && matchesStatus
   })
@@ -85,10 +67,12 @@ watch(selectedCity, (newVal, oldVal) => {
 })
 
 watchEffect(() => {
+  currentPage.value = 1
   console.log(`👁️‍🗨️ watchEffect searchCity: 검색어가 [${searchCity.value}]로 변경됐습니다.`)
 })
 
 watch(selectedStatus, (newVal, oldVal) => {
+  currentPage.value = 1
   console.log(`🤖 watch selectedStatus: 선택된 날씨가 [${oldVal}]에서 [${newVal}]로 변경됐습니다.`)
 })
 
@@ -119,6 +103,9 @@ const fetchRealTimeWeather = async () => {
   isLoading.value = true
 
   try {
+    // element-plus loading 확인용
+    // await new Promise((resolve) => setTimeout(resolve, 2000))
+
     const responses = await Promise.all(
       cityPool.map((city) =>
         axios.get(BASE_URL, {
@@ -151,6 +138,13 @@ const fetchRealTimeWeather = async () => {
 onMounted(() => {
   fetchRealTimeWeather()
 })
+
+// Pagination
+const paginatedWeatherList = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+
+  return filteredWeatherList.value.slice(start, start + pageSize)
+})
 </script>
 
 <template>
@@ -168,14 +162,13 @@ onMounted(() => {
         <option value="비">비</option>
         <option value="바람">바람</option>
       </select>
-      <div v-if="isLoading" class="weather-card">
-        <p>날씨 정보를 불러오는 중입니다... ☁️</p>
-      </div>
+      <div v-if="isLoading" v-loading="isLoading" element-loading-text="날씨 정보를 불러오는 중입니다... ☁️" class="weather-card loading-area"></div>
       <div v-else-if="filteredWeatherList.length === 0" class="weather-card">
         <p>검색 결과와 일치하는 도시가 없습니다.</p>
       </div>
+
       <WeatherCard
-        v-for="item in filteredWeatherList"
+        v-for="item in paginatedWeatherList"
         :key="item.id"
         :city-item="item"
         @select-card="handleSelectCity"
@@ -184,6 +177,9 @@ onMounted(() => {
     </BaseDashboardCard>
     <div class="status-bar">
       {{ selectedCityInfo }}
+    </div>
+    <div class="pagination-area">
+      <PaginationBar v-if="!isLoading" v-model:current-page="currentPage" :page-size="5" :total="filteredWeatherList.length" />
     </div>
   </div>
 </template>
