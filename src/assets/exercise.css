@@ -118,8 +118,8 @@ input {
   background-color: #74b9ff;
 }
 .good {
-  background-color: #ffea00;
-  color: black;
+  background-color: #c5ff96;
+  color: rgb(68, 68, 68);
 }
 .btn-detail {
   position: absolute;
@@ -135,4 +135,7 @@ input {
   color: #2e7d32;
   font-weight: bold;
   border-radius: 6px;
+}
+.loading-area {
+  min-height: 120px;
 }
