@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router'
 import { cityPool } from '@/constants/weather'
 import axios from 'axios'
 import PaginationBar from '@/components/practices/exercise/PaginationBar.vue'
+import { useConfigStore } from '@/stores/configStore'
 
 const router = useRouter()
 const searchCity = ref('')
@@ -16,6 +17,9 @@ const selectedStatus = ref('전체')
 
 const currentPage = ref(1)
 const pageSize = 5
+
+const configStore = useConfigStore()
+const showFavoritesOnly = ref(false)
 
 const matchesWeatherFilter = (item) => {
   if (selectedStatus.value === '전체') return true
@@ -49,8 +53,9 @@ const filteredWeatherList = computed(() => {
   return weatherList.value.filter((item) => {
     const matchesCity = item.name.includes(keyword)
     const matchesStatus = matchesWeatherFilter(item)
+    const matchesFavorite = !showFavoritesOnly.value || configStore.isFavorite(item.id)
 
-    return matchesCity && matchesStatus
+    return matchesCity && matchesStatus && matchesFavorite
   })
 })
 
@@ -162,9 +167,13 @@ const paginatedWeatherList = computed(() => {
         <option value="비">비</option>
         <option value="바람">바람</option>
       </select>
+      <button @click="showFavoritesOnly = !showFavoritesOnly">
+        {{ showFavoritesOnly ? '★ 즐겨찾기만 보는 중' : '☆ 즐겨찾기만 보기' }}
+      </button>
       <div v-if="isLoading" v-loading="isLoading" element-loading-text="날씨 정보를 불러오는 중입니다... ☁️" class="weather-card loading-area"></div>
       <div v-else-if="filteredWeatherList.length === 0" class="weather-card">
-        <p>검색 결과와 일치하는 도시가 없습니다.</p>
+        <p v-if="showFavoritesOnly">즐겨찾기한 도시가 없습니다.</p>
+        <p v-else>검색 결과와 일치하는 도시가 없습니다.</p>
       </div>
 
       <WeatherCard

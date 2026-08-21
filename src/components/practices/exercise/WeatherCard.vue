@@ -1,8 +1,8 @@
 <script setup>
 import { computed } from 'vue'
-import { useConfigStroe } from '@/stores/configStore'
+import { useConfigStore } from '@/stores/configStore'
 
-const configStore = useConfigStroe()
+const configStore = useConfigStore()
 const props = defineProps({
   cityItem: {
     type: Object,
@@ -60,23 +60,24 @@ const humidityInfo = computed(() => {
     <label class="badge cool" v-else-if="cityItem.temp < 20">❄️ 추움 (20도 미만)</label>
     <label class="badge good" v-else>😊 선선함 (20도 이상, 30도 미만)</label>
     <button class="btn-detail" @click.stop="clickDetail(cityItem)">상세보기</button>
+    <button class="btn-favorite" @click.stop="configStore.toggleFavorite(cityItem.id)">
+      {{ configStore.isFavorite(cityItem.id) ? '★' : '☆' }}
+    </button>
 
     <el-progress :percentage="cityItem.humidity" :color="humidityInfo.color" :format="(percentage) => `${percentage}%`" />
   </div>
 </template>
 
 <style scoped>
-.rain-check-bottom {
+.btn-favorite {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
+  top: 15px;
+  right: 90px;
 
-  display: flex;
-  align-items: center;
-  gap: 5px;
-
-  font-size: 13px;
-  white-space: nowrap;
+  border: none;
+  background: transparent;
+  color: #f6c344;
+  font-size: 22px;
   cursor: pointer;
 }
 </style>

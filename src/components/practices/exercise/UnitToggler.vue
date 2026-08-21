@@ -1,7 +1,7 @@
 <script setup>
-import { useConfigStroe } from '@/stores/configStore'
+import { useConfigStore } from '@/stores/configStore'
 
-const configStore = useConfigStroe()
+const configStore = useConfigStore()
 </script>
 
 <template>
