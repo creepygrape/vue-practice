@@ -61,12 +61,7 @@ const humidityInfo = computed(() => {
     <label class="badge good" v-else>😊 선선함 (20도 이상, 30도 미만)</label>
     <button class="btn-detail" @click.stop="clickDetail(cityItem)">상세보기</button>
 
-<el-progress
-  :percentage="cityItem.humidity"
-  :color="humidityInfo.color"
-  :format="(percentage) => `${percentage}%`"
-/>
-
+    <el-progress :percentage="cityItem.humidity" :color="humidityInfo.color" :format="(percentage) => `${percentage}%`" />
   </div>
 </template>
 
