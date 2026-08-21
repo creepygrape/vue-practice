@@ -1,9 +1,11 @@
 <script setup>
 import { ref, computed, watch, watchEffect } from 'vue'
-import BaseDashboardCard from './BaseDashboardCard.vue'
-import SearchBar from './SearchBar.vue'
-import WeatherCard from './WeatherCard.vue'
+import BaseDashboardCard from '@/components/practices/exercise/BaseDashboardCard.vue'
+import SearchBar from '@/components/practices/exercise/SearchBar.vue'
+import WeatherCard from '@/components/practices/exercise/WeatherCard.vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const searchCity = ref('')
 const selectedCity = ref('')
 
@@ -83,7 +85,12 @@ const handleSelectCity = (newValue) => {
 }
 
 const handleClickDetail = (newValue) => {
-  showDetail(newValue.name, newValue.status)
+  // showDetail(newValue.name, newValue.status)
+  // router.push({
+  //   name: 'WeatherDetail',
+  //   params: {cityId: newValue.id}
+  // })
+  router.push('/weather/' + newValue.id)
 }
 </script>
 
@@ -122,4 +129,4 @@ const handleClickDetail = (newValue) => {
   </div>
 </template>
 
-<style scoped></style>
+<style></style>

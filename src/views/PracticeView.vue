@@ -21,11 +21,13 @@ import FormBinding from '@/components/practices/basic/FormBinding.vue'
 import FormBinding2 from '@/components/practices/basic/FormBinding2.vue'
 import VBindShort from '@/components/practices/basic/VBindShort.vue'
 import EventModifier from '@/components/practices/basic/EventModifier.vue'
+import Computed from '@/components/practices/basic/Computed.vue'
 </script>
 
 <template>
   <div class="about">
     <div style="padding: 20px">
+      <Computed />
       <h1>Vue Syntax</h1>
       <hr />
       <SampleOne />
