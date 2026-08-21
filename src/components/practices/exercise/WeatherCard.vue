@@ -34,16 +34,16 @@ const displayTemp = computed(() => {
     <div class="weather-title-row">
       <p>{{ cityItem.name }} ({{ cityItem.status }})</p>
     </div>
-    <o
-      >현재 기온: <strong>{{ displayTemp }}{{ configStore.unitSymbol }}</strong></o
-    >
+    <p>
+      현재 기온: <strong>{{ displayTemp }}{{ configStore.unitSymbol }}</strong>
+    </p>
     <p>습도: {{ cityItem.humidity }}% &nbsp;| &nbsp;바람: {{ cityItem.wind }}</p>
     <label class="badge hot" v-if="cityItem.temp >= 30">🔥 더움 (30도 이상)</label>
     <label class="badge cool" v-else-if="cityItem.temp < 20">❄️ 추움 (20도 미만)</label>
     <label class="badge good" v-else>😊 선선함 (20도 이상, 30도 미만)</label>
     <button class="btn-detail" @click.stop="clickDetail(cityItem)">상세보기</button>
 
-    <label v-if="cityItem.status === '비'" class="rain-check rain-check-bottom" @click.stop>
+    <label v-if="cityItem.status.includes('비')" class="rain-check rain-check-bottom" @click.stop>
       <input class="rain-check-input" type="checkbox" />
       우산 챙기기
     </label>

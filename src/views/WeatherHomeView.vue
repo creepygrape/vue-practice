@@ -1,28 +1,17 @@
 <script setup>
-import { ref, computed, watch, watchEffect } from 'vue'
+import { ref, computed, watch, watchEffect, onMounted } from 'vue'
 import BaseDashboardCard from '@/components/practices/exercise/BaseDashboardCard.vue'
 import SearchBar from '@/components/practices/exercise/SearchBar.vue'
 import WeatherCard from '@/components/practices/exercise/WeatherCard.vue'
 import { useRouter } from 'vue-router'
+import { cityPool } from '@/constants/weather'
+import axios from 'axios'
 
 const router = useRouter()
 const searchCity = ref('')
 const selectedCity = ref('')
 
 const selectedStatus = ref('전체')
-
-const weatherList = ref([
-  { id: 'city_01', name: '서울', temp: 30.0, status: '흐림', humidity: 45, wind: 2.3 },
-  { id: 'city_02', name: '인천', temp: 28.1, status: '맑음', humidity: 20, wind: 2.1 },
-  { id: 'city_03', name: '강릉', temp: 16.6, status: '구름', humidity: 35, wind: 1.5 },
-  { id: 'city_04', name: '포항', temp: 22.7, status: '비', humidity: 40, wind: 2.2 },
-  { id: 'city_05', name: '대전', temp: 30.9, status: '바람', humidity: 70, wind: 1.3 },
-  { id: 'city_06', name: '광주', temp: 27.0, status: '흐림', humidity: 35, wind: 0.8 },
-  { id: 'city_07', name: '제주', temp: 18.0, status: '맑음', humidity: 25, wind: 1.7 },
-  { id: 'city_08', name: '부산', temp: 30.8, status: '구름', humidity: 55, wind: 1.2 },
-  { id: 'city_09', name: '울산', temp: 29.9, status: '비', humidity: 60, wind: 0.6 },
-  { id: 'city_10', name: '강원도', temp: 14.3, status: '맑음', humidity: 40, wind: 1.8 },
-])
 
 const fashionList = ref([
   { id: 'fashion_01', status: '맑음', recommendation: '반팔 티셔츠, 얇은 셔츠, 선글라스', emoji: '🕶️' },
@@ -46,12 +35,38 @@ const fashionList = ref([
 //   return ((celsius * 9) / 5 + 32).toFixed(1)
 // }
 
+const matchesWeatherFilter = (item) => {
+  if (selectedStatus.value === '전체') return true
+
+  if (selectedStatus.value === '맑음') {
+    return item.status.includes('맑음')
+  }
+
+  if (selectedStatus.value === '흐림') {
+    return item.status.includes('흐림')
+  }
+
+  if (selectedStatus.value === '구름') {
+    return item.status.includes('구름')
+  }
+
+  if (selectedStatus.value === '비') {
+    return item.status.includes('비')
+  }
+
+  if (selectedStatus.value === '바람') {
+    return item.wind >= 7 // 기준값: 풍속 7m/s 이상
+  }
+
+  return true
+}
+
 const filteredWeatherList = computed(() => {
   const keyword = searchCity.value.trim()
 
   return weatherList.value.filter((item) => {
     const matchesCity = item.name.includes(keyword)
-    const matchesStatus = selectedStatus.value === '전체' || item.status === selectedStatus.value
+    const matchesStatus =  matchesWeatherFilter(item)
 
     return matchesCity && matchesStatus
   })
@@ -93,6 +108,49 @@ const handleClickDetail = (newValue) => {
   // })
   router.push('/weather/' + newValue.id)
 }
+
+// OpenWeather API
+const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
+const BASE_URL = import.meta.env.VITE_OPENWEATHER_BASE_URL
+const weatherList = ref([])
+const isLoading = ref(false)
+
+const fetchRealTimeWeather = async () => {
+  isLoading.value = true
+
+  try {
+    const responses = await Promise.all(
+      cityPool.map((city) =>
+        axios.get(BASE_URL, {
+          params: {
+            q: city.query,
+            appid: API_KEY,
+            units: 'metric',
+            lang: 'kr',
+          },
+        }),
+      ),
+    )
+    console.log(responses)
+    weatherList.value = responses.map(({ data }, index) => ({
+      id: String(data.id),
+      name: cityPool[index].name,
+      temp: data.main.temp,
+      status: data.weather[0].description,
+      humidity: data.main.humidity,
+      wind: data.wind.speed,
+    }))
+    console
+  } catch (error) {
+    console.log('뭔가 잘못됨;;; | ' + error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchRealTimeWeather()
+})
 </script>
 
 <template>
@@ -102,9 +160,6 @@ const handleClickDetail = (newValue) => {
     </BaseDashboardCard>
     <BaseDashboardCard>
       <h3>🏙️ 지역별 날씨 현황</h3>
-      <button @click="isCelsius = !isCelsius">
-        {{ isCelsius ? '화씨(°F)로 보기' : '섭씨(°C)로 보기' }}
-      </button>
       <select v-model="selectedStatus">
         <option value="전체">전체</option>
         <option value="맑음">맑음</option>
@@ -113,11 +168,15 @@ const handleClickDetail = (newValue) => {
         <option value="비">비</option>
         <option value="바람">바람</option>
       </select>
-      <div v-if="filteredWeatherList.length === 0" class="weather-card">
+      <div v-if="isLoading" class="weather-card">
+        <p>날씨 정보를 불러오는 중입니다... ☁️</p>
+      </div>
+      <div v-else-if="filteredWeatherList.length === 0" class="weather-card">
         <p>검색 결과와 일치하는 도시가 없습니다.</p>
       </div>
       <WeatherCard
-        v-for="item in filteredWeatherList" :key="item.id"
+        v-for="item in filteredWeatherList"
+        :key="item.id"
         :city-item="item"
         @select-card="handleSelectCity"
         @click-detail="handleClickDetail"
