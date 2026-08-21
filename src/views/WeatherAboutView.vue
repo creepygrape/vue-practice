@@ -5,7 +5,7 @@ const router = useRouter()
 
 const handleGoHome = () => {
   router.push({
-    name: 'Home'
+    name: 'Home',
   })
 }
 </script>

@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { useConfigStroe } from '@/stores/configStore'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const configStore = useConfigStroe()
 const city = ref(null)
 
 const weatherList = ref([
@@ -23,6 +25,14 @@ onMounted(() => {
   const cityId = route.params.cityId
   city.value = weatherList.value.find((item) => item.id === cityId)
 })
+
+const displayTemp = computed(() => {
+  const rawTemp = city.value.temp // 기본 원본 데이터는 섭씨 숫자
+  if (configStore.unit === 'fahrenheit') {
+    return Math.round((rawTemp * 9) / 5 + 32) // 화씨 변환 연산
+  }
+  return rawTemp // 'celsius'일 때는 원본 그대로 반환
+})
 </script>
 
 <template>
@@ -31,9 +41,9 @@ onMounted(() => {
     <hr />
 
     <div v-if="city" class="info-card">
-        <h4>📍 지정 지역: {{ city.name }}</h4>
+      <h4>📍 지정 지역: {{ city.name }}</h4>
       <p>
-        실시간 기온: <strong>{{ city.temp }}°C</strong>
+        실시간 기온: <strong>{{ displayTemp }}{{ configStore.unitSymbol }}</strong>
       </p>
       <p>기상 현황: {{ city.status }}</p>
       <p>대기 습도: {{ city.humidity }}</p>

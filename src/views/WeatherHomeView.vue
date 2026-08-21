@@ -9,7 +9,6 @@ const router = useRouter()
 const searchCity = ref('')
 const selectedCity = ref('')
 
-const isCelsius = ref(true)
 const selectedStatus = ref('전체')
 
 const weatherList = ref([
@@ -33,17 +32,19 @@ const fashionList = ref([
   { id: 'fashion_05', status: '바람', recommendation: '바람막이와 긴 바지', emoji: '🌬️' },
 ])
 
-const showDetail = (cityName, status) => {
-  window.alert(`${cityName}의 현재 날씨는 [${status}] 상태입니다.`)
-}
+// const showDetail = (cityName, status) => {
+//   window.alert(`${cityName}의 현재 날씨는 [${status}] 상태입니다.`)
+// }
 
-const displayTemperature = (celsius) => {
-  if (isCelsius.value) {
-    return celsius
-  }
+// const isCelsius = ref(true)
 
-  return ((celsius * 9) / 5 + 32).toFixed(1)
-}
+// const displayTemperature = (celsius) => {
+//   if (isCelsius.value) {
+//     return celsius
+//   }
+
+//   return ((celsius * 9) / 5 + 32).toFixed(1)
+// }
 
 const filteredWeatherList = computed(() => {
   const keyword = searchCity.value.trim()
@@ -116,9 +117,8 @@ const handleClickDetail = (newValue) => {
         <p>검색 결과와 일치하는 도시가 없습니다.</p>
       </div>
       <WeatherCard
-        :filtered-weather-list="filteredWeatherList"
-        :is-celsius="isCelsius"
-        :display-temperature="displayTemperature"
+        v-for="item in filteredWeatherList" :key="item.id"
+        :city-item="item"
         @select-card="handleSelectCity"
         @click-detail="handleClickDetail"
       />
