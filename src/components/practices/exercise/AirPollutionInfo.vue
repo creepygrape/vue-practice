@@ -81,13 +81,16 @@ const progressColor = (percentage) => {
 
 <style scoped>
 .air-compact {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid #ebeef5;
-  font-size: 13px;
+  margin-top: 12px;
+  padding: 10px 2px 0;
+  font-size: 15px;
 }
 .air-compact p {
   margin: 6px 0 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .air-title,
 .air-summary,
@@ -102,27 +105,30 @@ const progressColor = (percentage) => {
   color: #909399;
 }
 .air-detail {
-  margin: 18px 0;
-  padding: 15px;
-  background: #f1f2f6;
-  border-radius: 6px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 .air-detail h3 {
-  margin-top: 0;
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 800;
 }
 .air-loading {
   min-height: 100px;
 }
 .pollutant-list {
   display: grid;
-  gap: 18px;
-  margin-top: 18px;
+  gap: 12px;
+  margin-top: 14px;
 }
 .pollutant-heading {
   margin-bottom: 7px;
 }
 .air-reference {
-  margin: 12px 0 0;
-  font-size: 12px;
+  margin: 10px 0 0;
+  font-size: 10px;
 }
 </style>

@@ -10,6 +10,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import PaginationBar from '@/components/practices/exercise/PaginationBar.vue'
 import { useConfigStore } from '@/stores/configStore'
 import { useWeatherStore } from '@/stores/weatherStore'
+import { useSearchHistoryStore } from '@/stores/searchHistoryStore'
 import { fetchAirPollution, fetchCurrentWeather, WEATHER_API_MESSAGES } from '@/services/weatherApi'
 import { KAKAO_API_ERROR_MESSAGE, searchKakaoLocations } from '@/services/kakaoApi'
 
@@ -33,6 +34,7 @@ const pageSize = 4
 
 const configStore = useConfigStore()
 const weatherStore = useWeatherStore()
+const searchHistoryStore = useSearchHistoryStore()
 const showFavoritesOnly = ref(false)
 
 const matchesWeatherFilter = (item) => {
@@ -201,6 +203,16 @@ const weatherErrorMessage = ref('')
 const lastFetchedAt = ref(0)
 const WEATHER_TTL = 30 * 60 * 1000
 const addingLocationKey = ref('')
+const addedLocationKeys = computed(() => weatherList.value.map((item) => item.locationKey))
+const lastUpdatedText = computed(() => {
+  if (!lastFetchedAt.value) return '업데이트 전'
+
+  return `마지막 업데이트 ${new Intl.DateTimeFormat('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(lastFetchedAt.value)} 업데이트`
+})
 
 const fetchAirPollutionSafely = async (lat, lon) => {
   try {
@@ -248,6 +260,7 @@ const handleSelectCandidate = async (candidate) => {
       lat: candidate.lat,
       lon: candidate.lon,
     })
+    searchHistoryStore.addSearchHistory(candidate)
     locationSearchMessage.value = '새 날씨 카드를 추가했습니다.'
   } catch (error) {
     console.error('OpenWeather 좌표 날씨 조회 실패:', error)
@@ -255,6 +268,17 @@ const handleSelectCandidate = async (candidate) => {
   } finally {
     addingLocationKey.value = ''
   }
+}
+
+const handleSelectHistory = (historyItem) => {
+  handleSelectCandidate({
+    key: historyItem.locationKey,
+    displayName: historyItem.name,
+    addressName: historyItem.addressName,
+    region1: historyItem.region1,
+    lat: historyItem.lat,
+    lon: historyItem.lon,
+  })
 }
 
 const fetchRealTimeWeather = async () => {
@@ -374,8 +398,13 @@ const paginatedWeatherList = computed(() => {
         :is-searching="isSearchingLocation"
         :search-message="locationSearchMessage"
         :duplicate-message="duplicateLocationMessage"
+        :search-history="searchHistoryStore.searchHistory"
+        :added-location-keys="addedLocationKeys"
         @change-search-keyword="handleChangeSearchKeyword"
         @select-candidate="handleSelectCandidate"
+        @select-history="handleSelectHistory"
+        @remove-history="searchHistoryStore.removeSearchHistory"
+        @clear-history="searchHistoryStore.clearSearchHistory"
       />
     </BaseDashboardCard>
     <BaseDashboardCard>
@@ -385,6 +414,8 @@ const paginatedWeatherList = computed(() => {
         v-model:sort="selectedSort"
         v-model:favorites-only="showFavoritesOnly"
         :is-refreshing="isRefreshing"
+        :last-updated-text="lastUpdatedText"
+        @refresh="fetchRealTimeWeather"
       />
       <el-alert v-if="weatherErrorMessage" :title="weatherErrorMessage" type="error" :closable="false" show-icon />
       <div v-if="isLoading" v-loading="isLoading" element-loading-text="날씨 정보를 불러오는 중입니다... ☁️" class="weather-card loading-area"></div>
@@ -393,14 +424,16 @@ const paginatedWeatherList = computed(() => {
         <p v-else>검색 결과와 일치하는 도시가 없습니다.</p>
       </div>
 
-      <WeatherCard
-        v-for="item in paginatedWeatherList"
-        :key="item.id"
-        :city-item="item"
-        @select-card="handleSelectCity"
-        @click-detail="handleClickDetail"
-        @delete-card="handleDeleteCard"
-      />
+      <div class="weather-card-grid">
+        <WeatherCard
+          v-for="item in paginatedWeatherList"
+          :key="item.id"
+          :city-item="item"
+          @select-card="handleSelectCity"
+          @click-detail="handleClickDetail"
+          @delete-card="handleDeleteCard"
+        />
+      </div>
     </BaseDashboardCard>
     <div class="status-bar">
       {{ selectedCityInfo }}

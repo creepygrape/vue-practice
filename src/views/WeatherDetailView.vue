@@ -103,35 +103,94 @@ onMounted(() => {
 
 <template>
   <div class="detail-container">
-    <h3>📊 지역별 상세 기상 관측 정보</h3>
-    <hr />
+    <div class="detail-heading">
+      <button class="back-btn" type="button" @click="goBack">← 목록으로 돌아가기</button>
+      <div>
+        <span>WEATHER DETAIL</span>
+        <h2>{{ cityItem?.name ?? '지역 상세 날씨' }}</h2>
+      </div>
+    </div>
 
-    <CurrentWeatherInfo :city-item="cityItem" :is-loading="isLoading" :error-message="currentWeatherErrorMessage" />
-
-    <AirPollutionInfo :air-pollution="airPollution" :is-loading="isAirPollutionLoading" :error-message="airPollutionErrorMessage" />
-
-    <WeatherLifeIndices :current-weather="cityItem" :forecasts="forecasts" :air-pollution="airPollution" :timezone-offset="timezoneOffset" />
-
-    <WeatherForecast :forecasts="forecasts" :timezone-offset="timezoneOffset" :is-loading="isForecastLoading" :error-message="forecastErrorMessage" />
-
-    <button @click="goBack" class="back-btn">← 메인 대시보드로 돌아가기</button>
+    <div class="detail-dashboard">
+      <aside class="detail-sidebar">
+        <CurrentWeatherInfo :city-item="cityItem" :is-loading="isLoading" :error-message="currentWeatherErrorMessage" />
+        <AirPollutionInfo :air-pollution="airPollution" :is-loading="isAirPollutionLoading" :error-message="airPollutionErrorMessage" />
+        <WeatherLifeIndices :current-weather="cityItem" :forecasts="forecasts" :air-pollution="airPollution" :timezone-offset="timezoneOffset" />
+      </aside>
+      <div class="detail-forecast-panel">
+        <WeatherForecast
+          :forecasts="forecasts"
+          :timezone-offset="timezoneOffset"
+          :is-loading="isForecastLoading"
+          :error-message="forecastErrorMessage"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .detail-container {
-  margin: 0 auto;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  width: 100%;
+}
+.detail-heading {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.detail-heading > div {
+  text-align: center;
+}
+.detail-heading span {
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+.detail-heading h2 {
+  margin: 2px 0 0;
+  font-size: 23px;
+  font-weight: 850;
 }
 .back-btn {
-  padding: 8px 12px;
-  background: #2c3e50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  justify-self: start;
+  padding: 9px 13px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.detail-dashboard {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.38fr) minmax(0, 0.62fr);
+  gap: 18px;
+  align-items: start;
+}
+.detail-sidebar {
+  display: grid;
+  gap: 16px;
+}
+.detail-forecast-panel {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+@media (max-width: 960px) {
+  .detail-dashboard {
+    grid-template-columns: 1fr;
+  }
+  .detail-heading {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .detail-heading > div {
+    grid-row: 1;
+    text-align: left;
+  }
+  .back-btn {
+    grid-row: 2;
+  }
 }
 </style>

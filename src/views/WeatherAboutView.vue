@@ -58,7 +58,13 @@ const handleGoHome = () => {
     <section class="info-section">
       <div class="info-block">
         <h3>데이터 처리 방식</h3>
-        <p>카카오 로컬 API에서 국내 지역의 위도와 경도를 찾고, 해당 좌표를 기준으로 OpenWeather의 현재 날씨·예보·대기 오염 데이터를 조회합니다.</p>
+        <div class="data-flow" aria-label="날씨 데이터 처리 과정">
+          <div><strong>⌕ 카카오 API</strong><span>국내 지역 검색</span></div>
+          <b>→</b>
+          <div><strong>⌖ 좌표 변환</strong><span>위도·경도 추출</span></div>
+          <b>→</b>
+          <div><strong>☁ OpenWeather</strong><span>날씨 데이터 조회</span></div>
+        </div>
       </div>
 
       <div class="info-block">
@@ -82,21 +88,23 @@ const handleGoHome = () => {
 
 <style scoped>
 .about-view {
-  max-width: 960px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 20px 16px 40px;
   color: #27364b;
 }
 
 .intro-section {
-  padding: 34px;
-  border: 1px solid #dce9f5;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #eef8ff 0%, #f8fbff 55%, #edf5ff 100%);
+  padding: 46px 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
 }
 
 .intro-label {
-  color: #3182ce;
+  color: var(--color-primary);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -105,6 +113,7 @@ const handleGoHome = () => {
 .intro-section h2 {
   margin: 8px 0 12px;
   font-size: clamp(24px, 4vw, 34px);
+  font-weight: 850;
 }
 
 .intro-section p,
@@ -126,14 +135,20 @@ const handleGoHome = () => {
   display: flex;
   gap: 14px;
   padding: 22px;
-  border: 1px solid #e4eaf1;
-  border-radius: 14px;
-  background-color: #fff;
-  box-shadow: 0 5px 18px rgb(45 71 99 / 7%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .feature-icon {
+  display: grid;
   flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
   font-size: 26px;
 }
 
@@ -141,6 +156,7 @@ const handleGoHome = () => {
 .info-block h3 {
   margin: 0 0 8px;
   font-size: 17px;
+  font-weight: 800;
 }
 
 .info-section {
@@ -152,8 +168,38 @@ const handleGoHome = () => {
 
 .info-block {
   padding: 22px;
-  border-radius: 14px;
-  background-color: #f6f8fb;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.data-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.data-flow div {
+  display: grid;
+  gap: 3px;
+  padding: 12px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface-soft);
+  text-align: center;
+}
+.data-flow strong {
+  font-size: 12px;
+  font-weight: 800;
+}
+.data-flow span {
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+.data-flow b {
+  color: var(--color-primary);
+  font-size: 18px;
 }
 
 .tech-list {
@@ -188,7 +234,7 @@ const handleGoHome = () => {
   padding: 13px;
   border: none;
   border-radius: 10px;
-  background-color: #3182ce;
+  background-color: var(--color-primary);
   color: #fff;
   font-weight: 700;
   cursor: pointer;
@@ -214,6 +260,13 @@ const handleGoHome = () => {
   .feature-grid,
   .info-section {
     grid-template-columns: 1fr;
+  }
+
+  .data-flow {
+    grid-template-columns: 1fr;
+  }
+  .data-flow b {
+    transform: rotate(90deg);
   }
 
   .feature-card,

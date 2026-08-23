@@ -113,23 +113,37 @@ const rangeStyle = (day) => getTemperatureRangeStyle(day, dailyScale.value)
 
 <style scoped>
 .forecast-section {
-  margin-top: 24px;
+  margin: 0;
+}
+.forecast-section > h3 {
+  margin: 0 0 16px;
+  font-size: 19px;
+  font-weight: 850;
 }
 .forecast-loading {
   min-height: 120px;
 }
 .forecast-block {
-  margin: 18px 0 28px;
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px solid #e3ecf5;
+  border-radius: 13px;
+  background: var(--color-surface-soft);
+}
+.forecast-block:last-child {
+  margin-bottom: 0;
 }
 .forecast-block h4 {
-  margin-bottom: 8px;
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 800;
 }
 .chart-scroll {
-  overflow-x: auto;
+  overflow: hidden;
 }
 .temperature-chart {
   display: block;
-  min-width: 720px;
+  min-width: 0;
   width: 100%;
   height: auto;
 }
@@ -161,13 +175,13 @@ const rangeStyle = (day) => getTemperatureRangeStyle(day, dailyScale.value)
 }
 .daily-precipitation-scroll {
   margin: 0 44px;
-  overflow-x: auto;
+  overflow: hidden;
 }
 .daily-precipitation-chart {
   display: grid;
-  grid-template-columns: repeat(8, minmax(64px, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 8px;
-  min-width: 560px;
+  min-width: 0;
 }
 .daily-precipitation-column {
   display: grid;
@@ -245,6 +259,32 @@ const rangeStyle = (day) => getTemperatureRangeStyle(day, dailyScale.value)
 }
 
 @media (max-width: 600px) {
+  .temperature-chart text {
+    font-size: 10px;
+  }
+  .five-day-precipitation h5 {
+    margin-right: 18px;
+    margin-left: 18px;
+    font-size: 13px;
+  }
+  .daily-precipitation-scroll {
+    margin-right: 12px;
+    margin-left: 12px;
+  }
+  .daily-precipitation-chart {
+    gap: 3px;
+  }
+  .daily-precipitation-column {
+    grid-template-rows: 28px 18px 70px 20px 18px;
+    font-size: 10px;
+  }
+  .daily-precipitation-column img {
+    width: 28px;
+    height: 28px;
+  }
+  .daily-precipitation-track {
+    height: 70px;
+  }
   .daily-row {
     grid-template-columns: 42px 40px 1fr 34px minmax(80px, 1.5fr) 34px;
     gap: 5px;

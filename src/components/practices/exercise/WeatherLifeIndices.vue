@@ -74,17 +74,27 @@ const progressColor = (score, inverse = false) => {
 
 <style scoped>
 .life-indices {
-  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.life-indices > h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 800;
 }
 .index-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 .index-item {
-  padding: 15px;
-  background: #f1f2f6;
-  border-radius: 6px;
+  padding: 13px 14px;
+  border: 1px solid #e5edf6;
+  border-radius: 11px;
+  background: var(--color-surface-soft);
 }
 .index-heading {
   display: flex;
@@ -97,24 +107,22 @@ const progressColor = (score, inverse = false) => {
 }
 .index-score {
   display: block;
-  margin: 14px 0 8px;
-  font-size: 24px;
+  margin: 8px 0 5px;
+  color: var(--color-primary);
+  font-size: 21px;
+  font-weight: 850;
 }
 .index-item p {
-  margin: 8px 0;
-  font-size: 13px;
+  margin: 5px 0;
+  font-size: 11px;
+  line-height: 1.45;
 }
 .index-timing {
   color: #606266;
 }
 .index-reference {
+  margin: 12px 0 0;
   color: #909399;
-  font-size: 12px;
-}
-
-@media (max-width: 760px) {
-  .index-grid {
-    grid-template-columns: 1fr;
-  }
+  font-size: 10px;
 }
 </style>
