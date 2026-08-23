@@ -97,7 +97,7 @@ export const calculateOutingIndex = ({ currentWeather, forecasts, airPollution }
           : score < 75
             ? '외출 전 준비가 필요해요.'
             : '오늘 외출은 다시 생각해 보세요.',
-    reasonText: mainReasons.length ? `${mainReasons.join('과 ')}이(가) 주요 원인이에요.` : '큰 불편 요인이 없어요.',
+    reasonText: mainReasons.length ? `${mainReasons.join(', ')}이(가) 주요 원인이에요.` : '큰 불편 요인이 없어요.',
   }
 }
 
