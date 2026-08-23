@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useConfigStore } from '@/stores/configStore'
 import AirPollutionInfo from '@/components/practices/exercise/AirPollutionInfo.vue'
+import { convertTemperature } from '@/utils/weather'
 
 const configStore = useConfigStore()
 const props = defineProps({
@@ -21,13 +22,7 @@ const clickDetail = (item) => {
   emits('click-detail', item)
 }
 
-const displayTemp = computed(() => {
-  const rawTemp = props.cityItem.temp // 기본 원본 데이터는 섭씨 숫자
-  if (configStore.unit === 'fahrenheit') {
-    return Math.round((rawTemp * 9) / 5 + 32) // 화씨 변환 연산
-  }
-  return rawTemp // 'celsius'일 때는 원본 그대로 반환
-})
+const displayTemp = computed(() => convertTemperature(props.cityItem.temp, configStore.unit))
 
 const humidityInfo = computed(() => {
   const humidity = props.cityItem.humidity
@@ -56,7 +51,7 @@ const humidityInfo = computed(() => {
     <p>
       현재 기온: <strong>{{ displayTemp }}{{ configStore.unitSymbol }}</strong>
     </p>
-    <p>습도: {{ cityItem.humidity }}% ({{ humidityInfo.label }}) &nbsp;| &nbsp;풍속: {{ cityItem.wind }}ms</p>
+    <p>습도: {{ cityItem.humidity }}% ({{ humidityInfo.label }}) &nbsp;| &nbsp;풍속: {{ cityItem.wind }}m/s</p>
     <label class="badge hot" v-if="cityItem.temp >= 30">🔥 더움 (30도 이상)</label>
     <label class="badge cool" v-else-if="cityItem.temp < 20">❄️ 추움 (20도 미만)</label>
     <label class="badge good" v-else>😊 선선함 (20도 이상, 30도 미만)</label>

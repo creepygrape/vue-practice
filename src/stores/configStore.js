@@ -15,11 +15,19 @@ export const useConfigStore = defineStore('config', () => {
 
   // 2. 도시 즐겨찾기
   const FAVORITE_STORAGE_KEY = 'weather-favorite-city-ids'
+  const normalizeFavoriteId = (cityId) => String(cityId).replace(/^weather:/, '')
+
   function loadFavorites() {
     try {
       const savedFavorites = localStorage.getItem(FAVORITE_STORAGE_KEY)
+      const parsedFavorites = savedFavorites ? JSON.parse(savedFavorites) : []
+      if (!Array.isArray(parsedFavorites)) return []
 
-      return savedFavorites ? JSON.parse(savedFavorites) : []
+      const normalizedFavorites = [
+        ...new Set(parsedFavorites.filter((cityId) => typeof cityId === 'string' || typeof cityId === 'number').map(normalizeFavoriteId)),
+      ]
+      localStorage.setItem(FAVORITE_STORAGE_KEY, JSON.stringify(normalizedFavorites))
+      return normalizedFavorites
     } catch {
       return []
     }
@@ -31,23 +39,26 @@ export const useConfigStore = defineStore('config', () => {
   const favoriteCityIds = ref(loadFavorites())
 
   function isFavorite(cityId) {
-    return favoriteCityIds.value.includes(cityId)
+    return favoriteCityIds.value.includes(normalizeFavoriteId(cityId))
   }
 
   function toggleFavorite(cityId) {
-    if (isFavorite(cityId)) {
-      favoriteCityIds.value = favoriteCityIds.value.filter((id) => id !== cityId)
+    const favoriteId = normalizeFavoriteId(cityId)
+
+    if (isFavorite(favoriteId)) {
+      favoriteCityIds.value = favoriteCityIds.value.filter((id) => id !== favoriteId)
       saveFavorites()
       return
     }
 
-    favoriteCityIds.value.push(cityId)
+    favoriteCityIds.value.push(favoriteId)
     saveFavorites()
   }
 
   function removeFavorite(cityId) {
-    if (!isFavorite(cityId)) return
-    favoriteCityIds.value = favoriteCityIds.value.filter((id) => id !== cityId)
+    const favoriteId = normalizeFavoriteId(cityId)
+    if (!isFavorite(favoriteId)) return
+    favoriteCityIds.value = favoriteCityIds.value.filter((id) => id !== favoriteId)
     saveFavorites()
   }
 

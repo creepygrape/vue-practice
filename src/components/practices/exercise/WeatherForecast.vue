@@ -1,6 +1,14 @@
 <script setup>
 import { computed } from 'vue'
 import { useConfigStore } from '@/stores/configStore'
+import {
+  buildDailyForecasts,
+  buildFiveDayPrecipitation,
+  buildTemperatureChart,
+  FORECAST_CHART,
+  getDailyTemperatureScale,
+  getTemperatureRangeStyle,
+} from '@/utils/weatherForecast'
 
 const props = defineProps({
   forecasts: { type: Array, default: () => [] },
@@ -10,117 +18,15 @@ const props = defineProps({
 })
 
 const configStore = useConfigStore()
-const chartWidth = 720
-const chartHeight = 220
-const padding = { top: 24, right: 32, bottom: 44, left: 44 }
+const chartWidth = FORECAST_CHART.width
+const chartHeight = FORECAST_CHART.height
+const padding = FORECAST_CHART.padding
 
-const convertTemp = (temp) =>
-  configStore.unit === 'fahrenheit' ? Math.round((temp * 9) / 5 + 32) : Math.round(temp)
-
-const localDate = (timestamp) => new Date((timestamp + props.timezoneOffset) * 1000)
-const formatHour = (timestamp) => `${String(localDate(timestamp).getUTCHours()).padStart(2, '0')}시`
-const formatDate = (timestamp) => {
-  const date = localDate(timestamp)
-  return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`
-}
-
-const hourlyForecasts = computed(() => props.forecasts.slice(0, 8))
-
-const temperatureChart = computed(() => {
-  const values = hourlyForecasts.value.map((item) => convertTemp(item.main.temp))
-  if (!values.length) return { points: '', items: [], guides: [] }
-
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const chartMin = min === max ? min - 1 : min - 1
-  const chartMax = min === max ? max + 1 : max + 1
-  const innerWidth = chartWidth - padding.left - padding.right
-  const innerHeight = chartHeight - padding.top - padding.bottom
-  const getX = (index) => padding.left + (innerWidth * index) / Math.max(values.length - 1, 1)
-  const getY = (value) => padding.top + ((chartMax - value) / (chartMax - chartMin)) * innerHeight
-  const items = hourlyForecasts.value.map((item, index) => ({
-    x: getX(index),
-    y: getY(values[index]),
-    temp: values[index],
-    time: formatHour(item.dt),
-    description: item.weather[0].description,
-  }))
-  const guides = [chartMin, (chartMin + chartMax) / 2, chartMax].map((value) => ({
-    value: Math.round(value),
-    y: getY(value),
-  }))
-
-  return { points: items.map((item) => `${item.x},${item.y}`).join(' '), items, guides }
-})
-
-const dailyForecasts = computed(() => {
-  const grouped = new Map()
-
-  props.forecasts.forEach((item) => {
-    const date = formatDate(item.dt)
-    const current = grouped.get(date) ?? {
-      date,
-      temps: [],
-      icons: [],
-      descriptions: [],
-      timestamp: item.dt,
-    }
-    current.temps.push(item.main.temp)
-    current.icons.push(item.weather[0].icon)
-    current.descriptions.push(item.weather[0].description)
-    grouped.set(date, current)
-  })
-
-  return [...grouped.values()].slice(0, 5).map((day) => {
-    const iconIndex = Math.floor(day.icons.length / 2)
-    return {
-      date: day.date,
-      min: convertTemp(Math.min(...day.temps)),
-      max: convertTemp(Math.max(...day.temps)),
-      icon: day.icons[iconIndex],
-      description: day.descriptions[iconIndex],
-    }
-  })
-})
-
-const fiveDayPrecipitation = computed(() => {
-  const groups = []
-
-  for (let index = 0; index < props.forecasts.length; index += 8) {
-    const forecasts = props.forecasts.slice(index, index + 8)
-    if (!forecasts.length) continue
-
-    const items = forecasts.map((item) => ({
-      dt: item.dt,
-      time: formatHour(item.dt),
-      probability: Math.round((item.pop ?? 0) * 100),
-      amount: Math.round(((item.rain?.['3h'] ?? item.snow?.['3h'] ?? 0) + Number.EPSILON) * 10) / 10,
-      precipitationType: item.snow?.['3h'] ? '눈' : item.rain?.['3h'] ? '비' : '',
-      icon: item.weather[0].icon,
-      description: item.weather[0].description,
-    }))
-
-    groups.push({
-      label: `${formatDate(items[0].dt)} ${items[0].time}부터 ${items.length * 3}시간`,
-      items,
-      hasPrecipitation: items.some((item) => item.amount > 0 || item.probability > 0),
-    })
-  }
-
-  return groups.slice(0, 5)
-})
-
-const dailyScale = computed(() => {
-  if (!dailyForecasts.value.length) return { min: 0, range: 1 }
-  const min = Math.min(...dailyForecasts.value.map((day) => day.min))
-  const max = Math.max(...dailyForecasts.value.map((day) => day.max))
-  return { min, range: Math.max(max - min, 1) }
-})
-
-const rangeStyle = (day) => ({
-  left: `${((day.min - dailyScale.value.min) / dailyScale.value.range) * 100}%`,
-  width: `${Math.max(((day.max - day.min) / dailyScale.value.range) * 100, 2)}%`,
-})
+const temperatureChart = computed(() => buildTemperatureChart(props.forecasts, props.timezoneOffset, configStore.unit))
+const dailyForecasts = computed(() => buildDailyForecasts(props.forecasts, props.timezoneOffset, configStore.unit))
+const fiveDayPrecipitation = computed(() => buildFiveDayPrecipitation(props.forecasts, props.timezoneOffset))
+const dailyScale = computed(() => getDailyTemperatureScale(dailyForecasts.value))
+const rangeStyle = (day) => getTemperatureRangeStyle(day, dailyScale.value)
 </script>
 
 <template>
@@ -206,35 +112,143 @@ const rangeStyle = (day) => ({
 </template>
 
 <style scoped>
-.forecast-section { margin-top: 24px; }
-.forecast-loading { min-height: 120px; }
-.forecast-block { margin: 18px 0 28px; }
-.forecast-block h4 { margin-bottom: 8px; }
-.chart-scroll { overflow-x: auto; }
-.temperature-chart { display: block; min-width: 720px; width: 100%; height: auto; }
-.temperature-chart text { fill: #606266; font-size: 12px; }
-.chart-grid { stroke: #dcdfe6; stroke-width: 1; }
-.temperature-line { fill: none; stroke: #409eff; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
-.temperature-point { fill: #fff; stroke: #409eff; stroke-width: 3; cursor: pointer; }
-.five-day-precipitation h5 { margin: 0 48px 8px; text-align: center; font-size: 15px; }
-.daily-precipitation-scroll { margin: 0 44px; overflow-x: auto; }
-.daily-precipitation-chart { display: grid; grid-template-columns: repeat(8, minmax(64px, 1fr)); gap: 8px; min-width: 560px; }
-.daily-precipitation-column { display: grid; grid-template-rows: 34px 20px 78px 22px 20px; text-align: center; color: #606266; }
-.daily-precipitation-column img { width: 34px; height: 34px; margin: 0 auto; }
-.daily-precipitation-track { position: relative; height: 78px; overflow: hidden; background: #ecf5ff; border-radius: 4px 4px 0 0; }
-.daily-precipitation-bar { position: absolute; right: 0; bottom: 0; left: 0; min-height: 2px; background: #409eff; }
-.daily-precipitation-column strong { color: #409eff; font-size: 12px; }
-.no-precipitation { margin: 4px 48px 0; color: #909399; text-align: center; font-size: 12px; }
-.daily-list { display: grid; gap: 10px; }
-.daily-row { display: grid; grid-template-columns: 48px 44px minmax(80px, 1fr) 38px minmax(120px, 2fr) 38px; gap: 8px; align-items: center; }
-.daily-row img { width: 44px; height: 44px; }
-.daily-description { color: #606266; }
-.temp-min { color: #409eff; text-align: right; }
-.temp-max { color: #f56c6c; }
-.temperature-range-track { position: relative; height: 8px; background: #ebeef5; border-radius: 4px; }
-.temperature-range { position: absolute; top: 0; bottom: 0; min-width: 4px; background: linear-gradient(90deg, #409eff, #f56c6c); border-radius: 4px; }
+.forecast-section {
+  margin-top: 24px;
+}
+.forecast-loading {
+  min-height: 120px;
+}
+.forecast-block {
+  margin: 18px 0 28px;
+}
+.forecast-block h4 {
+  margin-bottom: 8px;
+}
+.chart-scroll {
+  overflow-x: auto;
+}
+.temperature-chart {
+  display: block;
+  min-width: 720px;
+  width: 100%;
+  height: auto;
+}
+.temperature-chart text {
+  fill: #606266;
+  font-size: 12px;
+}
+.chart-grid {
+  stroke: #dcdfe6;
+  stroke-width: 1;
+}
+.temperature-line {
+  fill: none;
+  stroke: #409eff;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.temperature-point {
+  fill: #fff;
+  stroke: #409eff;
+  stroke-width: 3;
+  cursor: pointer;
+}
+.five-day-precipitation h5 {
+  margin: 0 48px 8px;
+  text-align: center;
+  font-size: 15px;
+}
+.daily-precipitation-scroll {
+  margin: 0 44px;
+  overflow-x: auto;
+}
+.daily-precipitation-chart {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(64px, 1fr));
+  gap: 8px;
+  min-width: 560px;
+}
+.daily-precipitation-column {
+  display: grid;
+  grid-template-rows: 34px 20px 78px 22px 20px;
+  text-align: center;
+  color: #606266;
+}
+.daily-precipitation-column img {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto;
+}
+.daily-precipitation-track {
+  position: relative;
+  height: 78px;
+  overflow: hidden;
+  background: #ecf5ff;
+  border-radius: 4px 4px 0 0;
+}
+.daily-precipitation-bar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  min-height: 2px;
+  background: #409eff;
+}
+.daily-precipitation-column strong {
+  color: #409eff;
+  font-size: 12px;
+}
+.no-precipitation {
+  margin: 4px 48px 0;
+  color: #909399;
+  text-align: center;
+  font-size: 12px;
+}
+.daily-list {
+  display: grid;
+  gap: 10px;
+}
+.daily-row {
+  display: grid;
+  grid-template-columns: 48px 44px minmax(80px, 1fr) 38px minmax(120px, 2fr) 38px;
+  gap: 8px;
+  align-items: center;
+}
+.daily-row img {
+  width: 44px;
+  height: 44px;
+}
+.daily-description {
+  color: #606266;
+}
+.temp-min {
+  color: #409eff;
+  text-align: right;
+}
+.temp-max {
+  color: #f56c6c;
+}
+.temperature-range-track {
+  position: relative;
+  height: 8px;
+  background: #ebeef5;
+  border-radius: 4px;
+}
+.temperature-range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 4px;
+  background: linear-gradient(90deg, #409eff, #f56c6c);
+  border-radius: 4px;
+}
 
 @media (max-width: 600px) {
-  .daily-row { grid-template-columns: 42px 40px 1fr 34px minmax(80px, 1.5fr) 34px; gap: 5px; font-size: 13px; }
+  .daily-row {
+    grid-template-columns: 42px 40px 1fr 34px minmax(80px, 1.5fr) 34px;
+    gap: 5px;
+    font-size: 13px;
+  }
 }
 </style>

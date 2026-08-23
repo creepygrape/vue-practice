@@ -3,13 +3,15 @@ import { ref, computed, watch, watchEffect, onMounted, onBeforeUnmount, onActiva
 import BaseDashboardCard from '@/components/practices/exercise/BaseDashboardCard.vue'
 import SearchBar from '@/components/practices/exercise/SearchBar.vue'
 import WeatherCard from '@/components/practices/exercise/WeatherCard.vue'
+import WeatherFilterBar from '@/components/practices/exercise/WeatherFilterBar.vue'
 import { useRouter } from 'vue-router'
 import { cityPool } from '@/constants/weather'
-import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PaginationBar from '@/components/practices/exercise/PaginationBar.vue'
 import { useConfigStore } from '@/stores/configStore'
 import { useWeatherStore } from '@/stores/weatherStore'
+import { fetchAirPollution, fetchCurrentWeather, WEATHER_API_MESSAGES } from '@/services/weatherApi'
+import { KAKAO_API_ERROR_MESSAGE, searchKakaoLocations } from '@/services/kakaoApi'
 
 defineOptions({ name: 'WeatherHomeView' })
 
@@ -84,9 +86,7 @@ const sortedWeatherList = computed(() => {
     return items.sort((a, b) => a.temp - b.temp)
   }
   if (selectedSort.value === 'latest') {
-    const addedOrderByKey = new Map(
-      weatherStore.addedLocations.map((location, index) => [location.locationKey, index]),
-    )
+    const addedOrderByKey = new Map(weatherStore.addedLocations.map((location, index) => [location.locationKey, index]))
     return items.sort((a, b) => {
       if (a.isCustom !== b.isCustom) return a.isCustom ? -1 : 1
       if (a.isCustom) return addedOrderByKey.get(b.locationKey) - addedOrderByKey.get(a.locationKey)
@@ -127,16 +127,6 @@ const handleChangeSearchKeyword = (newValue) => {
   searchCity.value = newValue
 }
 
-const KAKAO_GEO_URL = import.meta.env.VITE_KAKAO_GEO_URL
-const KAKAO_API_KEY = import.meta.env.VITE_KAKAO_API_KEY
-
-const getCandidateName = (document) => {
-  const address = document.address
-  if (!address) return document.address_name
-
-  return [address.region_1depth_name, address.region_2depth_name, address.region_3depth_name].filter(Boolean).join(' ')
-}
-
 const isSameLocation = (candidate) =>
   weatherList.value.some((item) => {
     if (item.locationKey === candidate.key || item.name === candidate.displayName) return true
@@ -150,33 +140,11 @@ const searchLocationCandidates = async (keyword, requestId) => {
   locationSearchMessage.value = ''
 
   try {
-    const { data } = await axios.get(KAKAO_GEO_URL, {
-      headers: { Authorization: `KakaoAK ${KAKAO_API_KEY}` },
-      params: { query: keyword, size: 30 },
-    })
+    const candidates = await searchKakaoLocations(keyword)
 
     if (requestId !== searchRequestId) return
 
-    const uniqueCandidates = new Map()
-    const legalDistrictDocuments = data.documents.filter((document) => document.address?.b_code)
-    legalDistrictDocuments.forEach((document) => {
-      const bCode = document.address.b_code
-      const displayName = getCandidateName(document)
-      const candidate = {
-        key: bCode,
-        displayName,
-        addressName: document.address_name,
-        region1: document.address?.region_1depth_name ?? '',
-        lat: Number(document.y),
-        lon: Number(document.x),
-      }
-
-      if (!uniqueCandidates.has(bCode)) {
-        uniqueCandidates.set(bCode, candidate)
-      }
-    })
-
-    locationCandidates.value = [...uniqueCandidates.values()]
+    locationCandidates.value = candidates
     if (!locationCandidates.value.length) {
       locationSearchMessage.value = '추가할 수 있는 법정동 후보가 없습니다.'
     }
@@ -184,7 +152,7 @@ const searchLocationCandidates = async (keyword, requestId) => {
     if (requestId !== searchRequestId) return
     console.error('카카오 지역 검색 실패:', error)
     locationCandidates.value = []
-    locationSearchMessage.value = '지역 후보를 불러오지 못했습니다.'
+    locationSearchMessage.value = KAKAO_API_ERROR_MESSAGE
   } finally {
     if (requestId === searchRequestId) isSearchingLocation.value = false
   }
@@ -226,29 +194,17 @@ const handleClickDetail = (newValue) => {
   })
 }
 
-// OpenWeather API
-const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
-const BASE_URL = import.meta.env.VITE_OPENWEATHER_BASE_URL
-const AIR_POLLUTION_URL =
-  import.meta.env.VITE_OPENWEATHER_AIR_POLLUTION_URL || 'https://api.openweathermap.org/data/2.5/air_pollution'
 const weatherList = ref([])
 const isLoading = ref(false)
 const isRefreshing = ref(false)
+const weatherErrorMessage = ref('')
 const lastFetchedAt = ref(0)
 const WEATHER_TTL = 30 * 60 * 1000
 const addingLocationKey = ref('')
 
-const fetchAirPollution = async (lat, lon) => {
+const fetchAirPollutionSafely = async (lat, lon) => {
   try {
-    const { data } = await axios.get(AIR_POLLUTION_URL, {
-      params: { lat, lon, appid: API_KEY },
-    })
-    const result = data.list[0]
-    return {
-      aqi: result.main.aqi,
-      pm25: Math.round(result.components.pm2_5 * 10) / 10,
-      pm10: Math.round(result.components.pm10 * 10) / 10,
-    }
+    return await fetchAirPollution({ lat, lon })
   } catch (error) {
     console.warn('대기질 정보 불러오기 실패:', error)
     return null
@@ -267,30 +223,22 @@ const handleSelectCandidate = async (candidate) => {
   locationSearchMessage.value = '선택한 지역의 날씨를 불러오는 중입니다...'
 
   try {
-    const [{ data }, airPollution] = await Promise.all([
-      axios.get(BASE_URL, {
-        params: {
-          lat: candidate.lat,
-          lon: candidate.lon,
-          appid: API_KEY,
-          units: 'metric',
-          lang: 'kr',
-        },
-      }),
-      fetchAirPollution(candidate.lat, candidate.lon),
+    const [weather, airPollution] = await Promise.all([
+      fetchCurrentWeather({ lat: candidate.lat, lon: candidate.lon }),
+      fetchAirPollutionSafely(candidate.lat, candidate.lon),
     ])
 
     weatherList.value.push({
       id: candidate.key,
-      weatherId: String(data.id),
+      weatherId: weather.weatherId,
       locationKey: candidate.key,
       name: candidate.displayName,
       lat: candidate.lat,
       lon: candidate.lon,
-      temp: data.main.temp,
-      status: data.weather[0].description,
-      humidity: data.main.humidity,
-      wind: data.wind.speed,
+      temp: weather.temp,
+      status: weather.status,
+      humidity: weather.humidity,
+      wind: weather.wind,
       isCustom: true,
       airPollution,
     })
@@ -303,7 +251,7 @@ const handleSelectCandidate = async (candidate) => {
     locationSearchMessage.value = '새 날씨 카드를 추가했습니다.'
   } catch (error) {
     console.error('OpenWeather 좌표 날씨 조회 실패:', error)
-    locationSearchMessage.value = '선택한 지역의 날씨를 불러오지 못했습니다.'
+    locationSearchMessage.value = WEATHER_API_MESSAGES.current
   } finally {
     addingLocationKey.value = ''
   }
@@ -315,6 +263,7 @@ const fetchRealTimeWeather = async () => {
   const isInitialLoad = weatherList.value.length === 0
   if (isInitialLoad) isLoading.value = true
   else isRefreshing.value = true
+  weatherErrorMessage.value = ''
 
   try {
     // element-plus loading 확인용
@@ -324,44 +273,56 @@ const fetchRealTimeWeather = async () => {
       ...cityPool.map((city, index) => ({ ...city, isCustom: false, initialOrder: index })),
       ...weatherStore.addedLocations.map((location) => ({ ...location, isCustom: true })),
     ]
-    const responses = await Promise.all(
+    const responses = await Promise.allSettled(
       locations.map(async (location) => {
-        const [{ data }, airPollution] = await Promise.all([
-          axios.get(BASE_URL, {
-            params: {
-              lat: location.lat,
-              lon: location.lon,
-              appid: API_KEY,
-              units: 'metric',
-              lang: 'kr',
-            },
-          }),
-          fetchAirPollution(location.lat, location.lon),
+        const [weather, airPollution] = await Promise.all([
+          fetchCurrentWeather({ lat: location.lat, lon: location.lon }),
+          fetchAirPollutionSafely(location.lat, location.lon),
         ])
-        return { data, airPollution }
+        return { weather, airPollution }
       }),
     )
-    console.log(responses)
-    weatherList.value = responses.map(({ data, airPollution }, index) => ({
-      id: locations[index].isCustom ? locations[index].locationKey : String(data.id),
-      weatherId: String(data.id),
-      locationKey: locations[index].isCustom ? locations[index].locationKey : `weather:${data.id}`,
-      name: locations[index].name,
-      aliases: locations[index].aliases,
-      lat: locations[index].lat,
-      lon: locations[index].lon,
-      temp: data.main.temp,
-      status: data.weather[0].description,
-      humidity: data.main.humidity,
-      wind: data.wind.speed,
-      isCustom: locations[index].isCustom,
-      initialOrder: locations[index].initialOrder,
-      airPollution,
-    }))
-    lastFetchedAt.value = Date.now()
-    console
+    let successCount = 0
+    let failureCount = 0
+
+    weatherList.value = responses
+      .map((response, index) => {
+        const location = locations[index]
+
+        if (response.status === 'fulfilled') {
+          successCount += 1
+          const { weather, airPollution } = response.value
+          return {
+            id: location.isCustom ? location.locationKey : weather.weatherId,
+            weatherId: weather.weatherId,
+            locationKey: location.isCustom ? location.locationKey : `weather:${weather.weatherId}`,
+            name: location.name,
+            aliases: location.aliases,
+            lat: location.lat,
+            lon: location.lon,
+            temp: weather.temp,
+            status: weather.status,
+            humidity: weather.humidity,
+            wind: weather.wind,
+            isCustom: location.isCustom,
+            initialOrder: location.initialOrder,
+            airPollution,
+          }
+        }
+
+        failureCount += 1
+        console.warn(`${location.name} 날씨 갱신 실패:`, response.reason)
+        return weatherList.value.find((item) =>
+          location.isCustom ? item.locationKey === location.locationKey : item.lat === location.lat && item.lon === location.lon,
+        )
+      })
+      .filter(Boolean)
+
+    if (successCount > 0) lastFetchedAt.value = Date.now()
+    weatherErrorMessage.value = successCount === 0 ? WEATHER_API_MESSAGES.current : failureCount > 0 ? WEATHER_API_MESSAGES.partial : ''
   } catch (error) {
-    console.log('날씨 정보 불러오기 실패 | ' + error)
+    console.error('날씨 정보 불러오기 실패:', error)
+    weatherErrorMessage.value = WEATHER_API_MESSAGES.current
   } finally {
     isLoading.value = false
     isRefreshing.value = false
@@ -419,27 +380,15 @@ const paginatedWeatherList = computed(() => {
     </BaseDashboardCard>
     <BaseDashboardCard>
       <h3>🏙️ 지역별 날씨 현황</h3>
-      <select v-model="selectedStatus">
-        <option value="전체">전체</option>
-        <option value="맑음">맑음</option>
-        <option value="흐림">흐림</option>
-        <option value="구름">구름</option>
-        <option value="비">비</option>
-        <option value="바람">바람</option>
-      </select>
-      <select v-model="selectedSort" aria-label="카드 정렬 기준">
-        <option value="default">기본순</option>
-        <option value="name">이름순</option>
-        <option value="temp-desc">기온 높은 순</option>
-        <option value="temp-asc">기온 낮은 순</option>
-        <option value="latest">최신 추가순</option>
-      </select>
-      <button @click="showFavoritesOnly = !showFavoritesOnly">
-        {{ showFavoritesOnly ? '★ 즐겨찾기만 보는 중' : '☆ 즐겨찾기만 보기' }}
-      </button>
-      <span v-if="isRefreshing" class="refreshing-message">날씨 갱신 중...</span>
+      <WeatherFilterBar
+        v-model:status="selectedStatus"
+        v-model:sort="selectedSort"
+        v-model:favorites-only="showFavoritesOnly"
+        :is-refreshing="isRefreshing"
+      />
+      <el-alert v-if="weatherErrorMessage" :title="weatherErrorMessage" type="error" :closable="false" show-icon />
       <div v-if="isLoading" v-loading="isLoading" element-loading-text="날씨 정보를 불러오는 중입니다... ☁️" class="weather-card loading-area"></div>
-      <div v-else-if="filteredWeatherList.length === 0" class="weather-card">
+      <div v-else-if="!weatherErrorMessage && filteredWeatherList.length === 0" class="weather-card">
         <p v-if="showFavoritesOnly">즐겨찾기한 도시가 없습니다.</p>
         <p v-else>검색 결과와 일치하는 도시가 없습니다.</p>
       </div>
@@ -461,11 +410,3 @@ const paginatedWeatherList = computed(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.refreshing-message {
-  margin-left: 8px;
-  color: #909399;
-  font-size: 13px;
-}
-</style>

@@ -35,8 +35,9 @@ const progressColor = (percentage) => {
         <el-tag :type="aqiInfo.type" size="small">{{ aqiInfo.label }}</el-tag>
       </div>
       <p>
-        미세먼지 PM10: <strong>{{ props.airPollution.pm10 }}</strong>㎍/㎥
-        &nbsp;|&nbsp; 초미세먼지 PM2.5: <strong>{{ props.airPollution.pm25 }}</strong>㎍/㎥
+        미세먼지 PM10: <strong>{{ props.airPollution.pm10 }}</strong
+        >㎍/㎥ &nbsp;|&nbsp; 초미세먼지 PM2.5: <strong>{{ props.airPollution.pm25 }}</strong
+        >㎍/㎥
       </p>
     </template>
     <p v-else class="air-unavailable">미세먼지 정보 없음</p>
@@ -61,11 +62,7 @@ const progressColor = (percentage) => {
             </el-tooltip>
             <span>{{ props.airPollution.pm25 }}㎍/㎥</span>
           </div>
-          <el-progress
-            :percentage="pm25Percentage"
-            :color="progressColor(pm25Percentage)"
-            :show-text="false"
-          />
+          <el-progress :percentage="pm25Percentage" :color="progressColor(pm25Percentage)" :show-text="false" />
         </div>
         <div class="pollutant-item">
           <div class="pollutant-heading">
@@ -74,11 +71,7 @@ const progressColor = (percentage) => {
             </el-tooltip>
             <span>{{ props.airPollution.pm10 }}㎍/㎥</span>
           </div>
-          <el-progress
-            :percentage="pm10Percentage"
-            :color="progressColor(pm10Percentage)"
-            :show-text="false"
-          />
+          <el-progress :percentage="pm10Percentage" :color="progressColor(pm10Percentage)" :show-text="false" />
         </div>
       </div>
       <p class="air-reference">농도 및 등급은 OpenWeather 기준입니다.</p>
@@ -87,14 +80,49 @@ const progressColor = (percentage) => {
 </template>
 
 <style scoped>
-.air-compact { margin-top: 10px; padding-top: 8px; border-top: 1px solid #ebeef5; font-size: 13px; }
-.air-compact p { margin: 6px 0 0; }
-.air-title, .air-summary, .pollutant-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.air-unavailable, .air-reference { color: #909399; }
-.air-detail { margin: 18px 0; padding: 15px; background: #f1f2f6; border-radius: 6px; }
-.air-detail h3 { margin-top: 0; }
-.air-loading { min-height: 100px; }
-.pollutant-list { display: grid; gap: 18px; margin-top: 18px; }
-.pollutant-heading { margin-bottom: 7px; }
-.air-reference { margin: 12px 0 0; font-size: 12px; }
+.air-compact {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #ebeef5;
+  font-size: 13px;
+}
+.air-compact p {
+  margin: 6px 0 0;
+}
+.air-title,
+.air-summary,
+.pollutant-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.air-unavailable,
+.air-reference {
+  color: #909399;
+}
+.air-detail {
+  margin: 18px 0;
+  padding: 15px;
+  background: #f1f2f6;
+  border-radius: 6px;
+}
+.air-detail h3 {
+  margin-top: 0;
+}
+.air-loading {
+  min-height: 100px;
+}
+.pollutant-list {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+.pollutant-heading {
+  margin-bottom: 7px;
+}
+.air-reference {
+  margin: 12px 0 0;
+  font-size: 12px;
+}
 </style>
