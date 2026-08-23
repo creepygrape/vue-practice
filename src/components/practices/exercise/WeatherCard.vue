@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useConfigStore } from '@/stores/configStore'
+import AirPollutionInfo from '@/components/practices/exercise/AirPollutionInfo.vue'
 
 const configStore = useConfigStore()
 const props = defineProps({
@@ -10,7 +11,7 @@ const props = defineProps({
   },
 })
 
-const emits = defineEmits(['select-card', 'click-detail'])
+const emits = defineEmits(['select-card', 'click-detail', 'delete-card'])
 
 const selectCard = (item) => {
   emits('select-card', item)
@@ -55,7 +56,7 @@ const humidityInfo = computed(() => {
     <p>
       현재 기온: <strong>{{ displayTemp }}{{ configStore.unitSymbol }}</strong>
     </p>
-    <p>습도: {{ cityItem.humidity }}% ({{ humidityInfo.label }}) &nbsp;| &nbsp;바람: {{ cityItem.wind }}</p>
+    <p>습도: {{ cityItem.humidity }}% ({{ humidityInfo.label }}) &nbsp;| &nbsp;풍속: {{ cityItem.wind }}ms</p>
     <label class="badge hot" v-if="cityItem.temp >= 30">🔥 더움 (30도 이상)</label>
     <label class="badge cool" v-else-if="cityItem.temp < 20">❄️ 추움 (20도 미만)</label>
     <label class="badge good" v-else>😊 선선함 (20도 이상, 30도 미만)</label>
@@ -63,8 +64,10 @@ const humidityInfo = computed(() => {
     <button class="btn-favorite" @click.stop="configStore.toggleFavorite(cityItem.id)">
       {{ configStore.isFavorite(cityItem.id) ? '★' : '☆' }}
     </button>
+    <button v-if="cityItem.isCustom" class="btn-delete" @click.stop="emits('delete-card', cityItem)">삭제</button>
 
     <el-progress :percentage="cityItem.humidity" :color="humidityInfo.color" :format="(percentage) => `${percentage}%`" />
+    <AirPollutionInfo :air-pollution="cityItem.airPollution" compact />
   </div>
 </template>
 
@@ -78,6 +81,16 @@ const humidityInfo = computed(() => {
   background: transparent;
   color: #f6c344;
   font-size: 22px;
+  cursor: pointer;
+}
+
+.btn-delete {
+  position: absolute;
+  right: 125px;
+  top: 17px;
+  border: none;
+  background: transparent;
+  color: #f56c6c;
   cursor: pointer;
 }
 </style>

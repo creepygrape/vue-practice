@@ -45,6 +45,12 @@ export const useConfigStore = defineStore('config', () => {
     saveFavorites()
   }
 
+  function removeFavorite(cityId) {
+    if (!isFavorite(cityId)) return
+    favoriteCityIds.value = favoriteCityIds.value.filter((id) => id !== cityId)
+    saveFavorites()
+  }
+
   return {
     unit,
     unitSymbol,
@@ -52,5 +58,6 @@ export const useConfigStore = defineStore('config', () => {
     favoriteCityIds,
     isFavorite,
     toggleFavorite,
+    removeFavorite,
   }
 })
