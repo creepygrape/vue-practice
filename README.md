@@ -455,3 +455,37 @@ const handleDocumentPointerDown = (event) => {
 #### 해결 결과
 
 검색 기록의 어떤 항목이나 제목·안내 문구를 눌러도 검색 영역 내부에서는 드롭다운이 유지됩니다. 이미 추가된 지역은 안내만 표시하고 검색 기록 순서를 바꾸지 않으며, 실제 새 날씨 카드가 추가된 경우에만 검색 기록이 갱신됩니다.
+
+## Element Plus 적용 내용
+
+날씨 앱의 로딩, 피드백, 데이터 표현과 페이지 이동에 Element Plus를 적용했습니다. 단순히 기본 UI를 사용하는 데서 그치지 않고, 프로젝트의 props·이벤트·CSS와 연결해 재사용할 수 있도록 구성했습니다.
+
+| Element Plus | 적용 위치 | 사용 목적 |
+| --- | --- | --- |
+| `v-loading` | `WeatherHomeView`, `CurrentWeatherInfo`, `WeatherForecast`, `AirPollutionInfo` | 현재 날씨·예보·대기질 API 요청 중 로딩 상태 표시 |
+| `el-alert` | 홈, 상세 날씨, 예보, 대기질, 생활 지수 | API 오류와 계산 불가 상태를 일관된 안내 문구로 표시 |
+| `el-progress` | `WeatherCard`, `AirPollutionInfo`, `WeatherLifeIndices` | 습도, PM10·PM2.5, 빨래·외출 후회·세차 지수를 막대로 시각화 |
+| `el-tag` | `AirPollutionInfo`, `WeatherLifeIndices` | 대기질 등급과 생활 날씨 지수 등급을 색상 라벨로 구분 |
+| `el-tooltip` | `WeatherForecast`, `AirPollutionInfo` | 그래프 지점의 시간·기온·강수량과 미세먼지 지표 설명 제공 |
+| `el-carousel` | `WeatherForecast` | 5일 강수 예보를 날짜별로 전환 |
+| `el-pagination` | `PaginationBar` | 날씨 카드를 페이지당 4개씩 표시 |
+| `ElMessageBox.confirm` | `WeatherHomeView` | 사용자가 추가한 지역을 삭제하기 전 확인 |
+| `ElMessage.success` | `WeatherHomeView` | 지역 카드 삭제 성공 알림 |
+
+### Pagination 커스텀
+
+Element Plus의 `el-pagination`을 `PaginationBar.vue`로 분리해 페이지 이동 UI를 재사용할 수 있게 했습니다. `currentPage`, `pageSize`, `total`을 props로 받고 Element Plus의 페이지 변경 이벤트를 `update:currentPage`로 다시 emit해 부모에서 `v-model:current-page`로 사용합니다.
+
+```vue
+<el-pagination
+  :current-page="currentPage"
+  :page-size="pageSize"
+  :total="total"
+  layout="prev, pager, next"
+  @update:current-page="emit('update:currentPage', $event)"
+/>
+```
+
+### 상태에 따른 색상 적용
+
+`el-progress`와 `el-tag`는 고정된 색상을 사용하지 않고 습도, 대기질 등급과 생활 지수 점수에 따라 `success`, `warning`, `danger` 등의 상태와 색상을 동적으로 전달합니다. 이를 통해 숫자만 읽지 않아도 현재 상태를 빠르게 구분할 수 있게 했습니다.
