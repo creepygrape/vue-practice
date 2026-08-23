@@ -9,7 +9,11 @@ import UnitToggler from './components/practices/exercise/UnitToggler.vue'
       <RouterLink to="/about" class="nav-item">About</RouterLink>
       <UnitToggler />
     </nav>
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <KeepAlive include="WeatherHomeView">
+        <component :is="Component" />
+      </KeepAlive>
+    </RouterView>
   </div>
 </template>
 <style>
