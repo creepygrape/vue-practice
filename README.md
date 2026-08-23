@@ -70,6 +70,38 @@ VITE_OPENWEATHER_AIR_POLLUTION_URL=https://api.openweathermap.org/data/2.5/air_p
 
 자신의 API_KEY를 발급받아 수정 후 사용합니다.
 
+## 주요 디렉터리
+
+```text
+src/
+├─ assets/                  # 공통 색상 변수와 날씨 화면 CSS
+├─ components/practices/exercise/
+│  ├─ AirPollutionInfo.vue # 대기질 정보
+│  ├─ CurrentWeatherInfo.vue
+│  ├─ PaginationBar.vue  # Element Plus 기반 커스텀 Pagination
+│  ├─ SearchBar.vue        # 지역 검색과 최근 검색 기록
+│  ├─ WeatherCard.vue
+│  ├─ WeatherFilterBar.vue
+│  ├─ WeatherForecast.vue # 시간별·일별 예보 UI
+│  └─ WeatherLifeIndices.vue
+├─ constants/weather.js    # 초기 국내 지역과 좌표
+├─ services/
+│  ├─ kakaoApi.js
+│  └─ weatherApi.js
+├─ stores/
+│  ├─ configStore.js       # 단위와 즐겨찾기
+│  ├─ searchHistoryStore.js
+│  └─ weatherStore.js      # 사용자가 추가한 지역
+├─ utils/
+│  ├─ weather.js
+│  ├─ weatherForecast.js
+│  └─ weatherIndices.js
+└─ views/
+   ├─ WeatherHomeView.vue
+   ├─ WeatherDetailView.vue
+   └─ WeatherAboutView.vue
+```
+
 ## 추가 구현 사항
 
 ### 즐겨찾기
@@ -156,37 +188,6 @@ return sortedWeatherList.value.slice(start, start + pageSize)
 
 초기 지역은 `src/constants/weather.js`에서 관리하고, 사용자가 추가한 지역만 `weather-added-locations`에 저장합니다.
 
-## 주요 디렉터리
-
-```text
-src/
-├─ assets/                  # 공통 색상 변수와 날씨 화면 CSS
-├─ components/practices/exercise/
-│  ├─ AirPollutionInfo.vue # 대기질 정보
-│  ├─ CurrentWeatherInfo.vue
-│  ├─ PaginationBar.vue  # Element Plus 기반 커스텀 Pagination
-│  ├─ SearchBar.vue        # 지역 검색과 최근 검색 기록
-│  ├─ WeatherCard.vue
-│  ├─ WeatherFilterBar.vue
-│  ├─ WeatherForecast.vue # 시간별·일별 예보 UI
-│  └─ WeatherLifeIndices.vue
-├─ constants/weather.js    # 초기 국내 지역과 좌표
-├─ services/
-│  ├─ kakaoApi.js
-│  └─ weatherApi.js
-├─ stores/
-│  ├─ configStore.js       # 단위와 즐겨찾기
-│  ├─ searchHistoryStore.js
-│  └─ weatherStore.js      # 사용자가 추가한 지역
-├─ utils/
-│  ├─ weather.js
-│  ├─ weatherForecast.js
-│  └─ weatherIndices.js
-└─ views/
-   ├─ WeatherHomeView.vue
-   ├─ WeatherDetailView.vue
-   └─ WeatherAboutView.vue
-```
 
 ## 트러블슈팅
 
@@ -243,7 +244,7 @@ OpenGeocoding은 전 세계 지명을 대상으로 하므로 국내 법정동과
 
 #### 문제 예제
 
-`"금호동"`을 검색하면 서울 성동구, 강원 속초시, 대구 북구 등의 서로 다른 지역이 후보로 나올 수 있습니다. 만약 단순히 `region_3depth_name` 같은 지역명만 비교하면 첫 번째 금호동을 추가한 뒤 다른 시도의 금호동을 중복으로 잘못 판단합니다.
+`"옥천리"`을 검색하면 서울 성동구, 강원 속초시, 대구 북구 등의 서로 다른 지역이 후보로 나올 수 있습니다. 만약 단순히 `region_3depth_name` 같은 지역명만 비교하면 첫 번째 옥천리을 추가한 뒤 다른 시도의 옥천리을 중복으로 잘못 판단합니다.
 
 카카오 응답에는 `h_code`와 `b_code`가 모두 있거나 둘 중 하나만 있는 경우가 있었습니다. 행정동과 법정동을 혼용하면 같은 후보를 서로 다른 지역으로 보거나, 코드가 빈 후보의 키가 불안정해질 수 있었습니다.
 
@@ -252,8 +253,8 @@ OpenGeocoding은 전 세계 지명을 대상으로 하므로 국내 법정동과
 국내 주소 검색에 적합한 Kakao Local API로 변경했습니다. 후보에는 전체 주소를 표시하고 Kakao가 제공하는 법정동 코드 `b_code`를 `locationKey`로 사용합니다.
 
 ```text
-서울 성동구 금호동1가 -> 1120010900
-강원특별자치도 속초시 금호동 -> 5121010400
+서울 성동구 옥천리1가 -> 1120010900
+강원특별자치도 속초시 옥천리 -> 5121010400
 ```
 
 두 지역은 이름 일부가 같더라도 법정동 코드가 다르므로 각각 추가할 수 있습니다. `h_code`는 행정동 기준이고 결과에 따라 값이 없을 수 있어, 이 프로젝트에서는 법정동 검색 결과와 일관된 `b_code` 하나만 사용합니다.
@@ -277,10 +278,10 @@ OpenGeocoding은 전 세계 지명을 대상으로 하므로 국내 법정동과
 #### 문제 예제
 
 ```text
-1. 금호동 카드 추가
-2. 금호동 즐겨찾기 선택
+1. 옥천리 카드 추가
+2. 옥천리 즐겨찾기 선택
 3. 새로고침
-4. 금호동 카드는 사라지지만 즐겨찾기 ID는 localStorage에 남음
+4. 옥천리 카드는 사라지지만 즐겨찾기 ID는 localStorage에 남음
 5. 같은 지역을 다시 추가하면 처음부터 즐겨찾기된 카드로 표시됨
 ```
 
