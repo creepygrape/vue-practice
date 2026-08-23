@@ -23,6 +23,7 @@ import SlotScopedParent from '@/components/practices/component/SlotScopedParent.
       <hr />
       <Ref />
       <Reactive />
+      <br />
     </div>
   </div>
 </template>
